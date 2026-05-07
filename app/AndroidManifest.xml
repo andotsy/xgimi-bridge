@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.xgimi.bridge"
+    android:versionCode="2"
+    android:versionName="0.2">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <!-- Required by JobInfo.Builder.setPersisted(true); we never receive the broadcast itself. -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE" />
+
+    <application android:label="Xgimi Bridge" android:hasCode="true">
+        <!-- Hidden helper activity: launchable by component name, not in apps drawer -->
+        <activity android:name=".LauncherActivity" android:exported="true" />
+
+        <service android:name=".BridgeJobService"
+                 android:permission="android.permission.BIND_JOB_SERVICE"
+                 android:exported="true" />
+
+        <service android:name=".BridgeService"
+                 android:exported="false"
+                 android:foregroundServiceType="connectedDevice" />
+    </application>
+
+    <uses-sdk android:minSdkVersion="29" android:targetSdkVersion="29" />
+</manifest>

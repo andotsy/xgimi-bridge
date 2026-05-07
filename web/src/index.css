@@ -1,0 +1,586 @@
+:root {
+  --bg: #000;
+  --panel: rgba(28, 28, 30, 0.72);
+  --panel-blur: 22px;
+  --fg: #f5f5f7;
+  --muted: rgba(235, 235, 245, 0.6);
+  --accent: #0a84ff;
+  --danger: #ff453a;
+  --border: rgba(255, 255, 255, 0.08);
+  --radius: 14px;
+}
+
+* { box-sizing: border-box; }
+html { background: #000; }
+html, body, #root { height: 100%; }
+body {
+  margin: 0;
+  background: #000;
+  color: var(--fg);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", system-ui, sans-serif;
+  font-size: 17px;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+.screen {
+  max-width: 540px;
+  margin: 0 auto;
+  padding: max(env(safe-area-inset-top), 24px) 16px max(env(safe-area-inset-bottom), 24px);
+}
+
+.hdr h1 {
+  font-size: 34px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin: 0 0 4px;
+}
+.hdr .subtitle {
+  margin: 0 0 24px;
+  color: var(--muted);
+  font-size: 15px;
+}
+.hdr .subtitle-offline { color: var(--danger); }
+
+.card {
+  background: var(--panel);
+  backdrop-filter: blur(var(--panel-blur));
+  -webkit-backdrop-filter: blur(var(--panel-blur));
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 16px;
+}
+.card h2 {
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  margin: 0 0 12px;
+}
+
+.card-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.card-head h2 { margin: 0; }
+.card-head-meta {
+  font-size: 13px;
+  color: var(--fg);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.muted { color: var(--muted); margin: 0; }
+.state, .err {
+  margin: 0;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 13px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.err { color: var(--danger); }
+
+ul.kv { list-style: none; padding: 0; margin: 0; }
+ul.kv li {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 10px 0; border-bottom: 1px solid var(--border);
+}
+ul.kv li:last-child { border-bottom: none; }
+ul.kv li span { color: var(--muted); }
+ul.kv li b { font-weight: 500; font-variant-numeric: tabular-nums; }
+
+.slider { padding: 8px 0; }
+.slider-row { display: flex; justify-content: space-between; padding-bottom: 6px; }
+.slider-row label { color: var(--fg); }
+.slider-value { font-variant-numeric: tabular-nums; font-weight: 600; }
+.slider input[type=range] {
+  -webkit-appearance: none; appearance: none;
+  width: 100%; height: 30px; background: transparent;
+}
+.slider input[type=range]::-webkit-slider-runnable-track {
+  height: 4px; border-radius: 2px; background: rgba(255,255,255,0.15);
+}
+.slider input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none;
+  width: 28px; height: 28px; border-radius: 50%;
+  background: white; box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+  margin-top: -12px;
+}
+
+.adb-card { background: rgba(10,132,255,0.08); border: 1px solid rgba(10,132,255,0.35); }
+.adb-card h2 { font-size: 16px; margin: 0 0 4px 0; }
+.adb-btn { background: var(--accent); color: #fff; border: none; }
+.adb-btn:hover:not(:disabled) { background: #066ed1; }
+
+.btn, .btn-pill {
+  font: inherit; cursor: pointer;
+  background: var(--accent); color: white;
+  border: none; border-radius: 12px; padding: 12px 16px;
+  font-weight: 600;
+}
+.btn:disabled, .btn-pill:disabled { opacity: 0.5; }
+.btn { width: 100%; margin-top: 12px; background: rgba(255,255,255,0.08); }
+.btn-pill { font-size: 14px; padding: 10px 14px; background: rgba(255,255,255,0.08); }
+.row { display: flex; gap: 8px; flex-wrap: wrap; }
+
+ul.presets { list-style: none; padding: 0; margin: 0 0 12px; }
+.preset { padding: 8px 0; border-bottom: 1px solid var(--border); }
+.preset:last-child { border-bottom: none; }
+.preset-row { display: flex; align-items: center; gap: 8px; }
+.preset-name {
+  flex: 1; display: flex; align-items: center; gap: 12px;
+  background: transparent; border: 0; color: var(--fg); font: inherit;
+  padding: 8px 0; cursor: pointer; text-align: left;
+}
+.preset-name:disabled { opacity: 0.5; }
+.preset-name .dot { width: 14px; height: 14px; border-radius: 50%; flex: 0 0 auto; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.15); }
+.preset-name span:nth-child(2) { flex: 1; font-weight: 500; }
+.preset-sub { color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+.preset-actions { display: flex; gap: 4px; }
+.icon-btn {
+  background: rgba(255,255,255,0.06); color: var(--fg);
+  border: 0; border-radius: 8px;
+  width: 32px; height: 32px; font-size: 18px; line-height: 1; cursor: pointer;
+}
+.icon-btn:disabled { opacity: 0.4; }
+.icon-danger { color: var(--danger); }
+
+.per-source { display: flex; gap: 6px; flex-wrap: wrap; }
+.chip {
+  background: rgba(255,255,255,0.06); color: var(--muted);
+  padding: 3px 8px; border-radius: 8px; font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.chip.on { background: rgba(48, 209, 88, 0.18); color: #30d158; }
+
+.badge { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; color: #8e8e93; }
+.badge .pin { display: block; }
+
+.collapsible { padding: 0; }
+.collapsible > summary {
+  list-style: none; cursor: pointer;
+  padding: 16px;
+  display: flex; align-items: center; justify-content: space-between;
+  user-select: none;
+}
+.collapsible > summary::-webkit-details-marker { display: none; }
+.collapsible > summary > h2 { margin: 0; }
+.collapsible > summary::after {
+  content: "›";
+  color: var(--muted);
+  font-size: 22px;
+  transform: rotate(90deg);
+  transition: transform 0.18s ease;
+  margin-left: 8px;
+}
+.collapsible[open] > summary::after { transform: rotate(-90deg); }
+.collapsible[open] { padding-bottom: 16px; }
+.collapsible > *:not(summary) { margin-left: 16px; margin-right: 16px; }
+
+.input-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.input-btn {
+  background: rgba(255,255,255,0.06); color: var(--fg); border: 0;
+  border-radius: 12px; padding: 14px 12px; font: inherit;
+  display: flex; flex-direction: column; align-items: flex-start; gap: 2px;
+  cursor: pointer; transition: background 0.12s;
+}
+.input-btn:disabled { opacity: 0.4; }
+.input-btn:active { background: rgba(255,255,255,0.12); }
+.input-btn span { font-weight: 600; font-size: 16px; }
+.input-btn small { color: var(--muted); font-size: 12px; }
+
+.state-row { margin-bottom: 12px; }
+.input-rows { display: flex; flex-direction: column; gap: 8px; }
+.input-btn-row { width: 100%; flex-direction: row; align-items: center; justify-content: space-between; padding: 16px; }
+.input-btn-row span { font-size: 17px; }
+.input-btn-row small { font-size: 13px; color: var(--muted); }
+
+.display-settings > h2 { margin: 0 0 12px; }
+.sub-card {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  margin-bottom: 8px;
+  background: rgba(255,255,255,0.03);
+}
+.sub-card:last-child { margin-bottom: 0; }
+.sub-card > summary {
+  list-style: none; cursor: pointer;
+  padding: 12px 14px;
+  display: flex; align-items: center; justify-content: space-between;
+  user-select: none;
+}
+.sub-card > summary::-webkit-details-marker { display: none; }
+.sub-card > summary > h3 { margin: 0; font-size: 15px; font-weight: 500; color: var(--fg); text-transform: none; letter-spacing: 0; }
+.sub-card > summary::after {
+  content: "›";
+  color: var(--muted);
+  font-size: 22px;
+  transform: rotate(90deg);
+  transition: transform 0.18s ease;
+}
+.sub-card[open] > summary::after { transform: rotate(-90deg); }
+.sub-card[open] { padding-bottom: 12px; }
+.sub-card > *:not(summary) { margin-left: 14px; margin-right: 14px; }
+
+.sub-card > summary { gap: 8px; }
+.sub-card > summary > h3 { flex: 1; }
+.sub-actions {
+  display: flex; align-items: center; gap: 4px;
+  /* lift above the chevron */
+  margin-right: 4px;
+}
+.sub-actions .icon-btn {
+  width: 30px; height: 30px;
+  font-size: 16px; line-height: 1;
+}
+.icon-accent { color: var(--accent); font-weight: 700; }
+
+/* Dialog — dark, neutral; not trying to mimic iOS. */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  padding: 24px;
+}
+.modal {
+  background: #1c1c1e;
+  border: 1px solid #2c2c2e;
+  border-radius: 8px;
+  padding: 18px 18px 14px;
+  min-width: 280px;
+  max-width: 380px;
+  width: 100%;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+  color: var(--fg);
+}
+.modal-title {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  margin: 0 0 8px;
+  color: var(--fg);
+}
+.modal-message {
+  font-size: 14px;
+  margin: 0 0 14px;
+  color: var(--muted);
+  line-height: 1.4;
+}
+.modal-input {
+  width: 100%;
+  background: #0e0e10;
+  border: 1px solid #2c2c2e;
+  border-radius: 4px;
+  padding: 9px 10px;
+  font: inherit;
+  font-size: 14px;
+  color: var(--fg);
+  outline: none;
+  margin-bottom: 14px;
+  transition: border-color 0.12s ease;
+}
+.modal-input:focus { border-color: var(--accent); }
+.modal-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+.modal-btn {
+  background: transparent;
+  color: var(--fg);
+  border: 1px solid #2c2c2e;
+  border-radius: 4px;
+  padding: 7px 14px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+.modal-btn:hover { background: #2c2c2e; }
+.modal-btn-primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+.modal-btn-primary:hover { background: #066ed1; border-color: #066ed1; }
+.modal-btn-danger {
+  background: #ff453a;
+  border-color: #ff453a;
+}
+.modal-btn-danger:hover { background: #d63b32; border-color: #d63b32; }
+
+.power-row { display: flex; flex-direction: column; gap: 8px; }
+.power-btn {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--fg);
+  border: 0;
+  border-radius: 12px;
+  padding: 14px 16px;
+  font: inherit;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.power-btn:disabled { opacity: 0.4; }
+.power-btn:hover:not(:disabled) { background: rgba(255, 255, 255, 0.1); }
+.power-btn:active:not(:disabled) { background: rgba(255, 255, 255, 0.14); }
+.power-btn span { font-weight: 600; font-size: 16px; }
+.power-btn small { color: var(--muted); font-size: 12px; }
+.power-btn-danger { color: var(--danger); }
+.power-btn-danger small { color: rgba(255, 69, 58, 0.6); }
+
+/* Header layout with the right-side action buttons (SRC + PWR, like classical remotes). */
+.hdr-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.hdr-actions { display: flex; gap: 8px; flex: 0 0 auto; margin-top: 4px; }
+.hdr-btn {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--fg);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  width: 44px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s;
+}
+.hdr-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+.hdr-btn:active:not(:disabled) { background: rgba(255, 255, 255, 0.16); }
+.hdr-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.hdr-power {
+  background: rgba(255, 69, 58, 0.1);
+  color: var(--danger);
+  border-color: rgba(255, 69, 58, 0.35);
+}
+.hdr-power:hover:not(:disabled) {
+  background: rgba(255, 69, 58, 0.18);
+  border-color: rgba(255, 69, 58, 0.6);
+}
+.hdr-power:active:not(:disabled) { background: rgba(255, 69, 58, 0.28); }
+
+/* Power / Source sheets — share the modal backdrop. */
+.power-sheet, .source-sheet {
+  background: #1c1c1e;
+  border: 1px solid #2c2c2e;
+  border-radius: 8px;
+  padding: 16px;
+  min-width: 280px;
+  max-width: 380px;
+  width: 100%;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+  color: var(--fg);
+}
+.source-sheet .input-rows { margin: 12px 0; }
+.input-btn-active {
+  border-color: var(--accent) !important;
+  background: rgba(10, 132, 255, 0.12) !important;
+}
+.power-list { list-style: none; padding: 0; margin: 12px 0; display: flex; flex-direction: column; gap: 6px; }
+.power-item {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 6px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  cursor: pointer;
+  font: inherit;
+  color: var(--fg);
+  transition: background 0.12s, border-color 0.12s;
+}
+.power-item:hover { background: rgba(255, 255, 255, 0.07); border-color: rgba(255, 255, 255, 0.12); }
+.power-item:active { background: rgba(255, 255, 255, 0.1); }
+.power-item-label { font-size: 15px; font-weight: 500; }
+.power-item-sub { font-size: 12px; color: var(--muted); }
+
+/* Close-X in top-right of modals/sheets. */
+.modal, .power-sheet { position: relative; }
+.modal-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--muted);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+}
+.modal-close:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--fg);
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
+/* Virtual remote — vertical layout matching the Xgimi physical remote, dark + matte. */
+.rc-card { padding-bottom: 22px; }
+.rc-shell {
+  margin: 8px auto 0;
+  max-width: 320px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  padding: 18px 16px 22px;
+  background: linear-gradient(180deg, #1c1c1e, #141416);
+  border: 1px solid #2c2c2e;
+  border-radius: 18px;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+}
+
+/* Generic round button */
+.rc-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--fg);
+  border-radius: 999px;
+  width: 56px;
+  height: 56px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.08s, transform 0.08s;
+  padding: 0;
+}
+.rc-btn:active {
+  background: rgba(255, 255, 255, 0.14);
+  transform: scale(0.96);
+}
+.rc-btn-small { width: 44px; height: 44px; }
+.rc-btn-vol { width: 96px; height: 44px; border-radius: 22px; }
+.rc-btn-assist { background: rgba(255, 255, 255, 0.04); }
+
+.rc-top-row, .rc-mid-row, .rc-vol-row { display: flex; gap: 12px; }
+
+/* D-pad: 288×288 outer container. Visible 240×240 circle is decorative (a ::before, no
+ * pointer events). The four arrow buttons each fill the full container and are clipped to
+ * their trapezoidal wedge; the four wedges tile the area outside the OK button exactly,
+ * so a tap anywhere in the dpad area goes to the nearest arrow. clip-path participates in
+ * hit-testing in modern browsers, so no JS gymnastics. */
+.rc-dpad {
+  position: relative;
+  width: 288px;
+  height: 288px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.rc-dpad::before {
+  content: '';
+  position: absolute;
+  width: 240px;
+  height: 240px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 50%, #28282a 0%, #18181a 70%, #0e0e10 100%);
+  border: 1px solid #2c2c2e;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), 0 4px 12px rgba(0,0,0,0.5);
+  pointer-events: none;
+}
+.rc-dpad button {
+  position: absolute;
+  background: transparent;
+  border: 0;
+  color: var(--fg);
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.rc-dpad-up,
+.rc-dpad-down,
+.rc-dpad-left,
+.rc-dpad-right { inset: 0; }
+/* Trapezoidal tap zones. Vertices in % of the 288×288 container — 33.3% / 66.7% align with
+ * the 96×96 OK button at the centre. Adjacent zones share their diagonal edge; the four
+ * shapes tile the box exactly minus the OK square. */
+/* Each arrow's tap zone is a full triangle from the container's outer edge to the centre.
+ * Triangles overlap the OK button area at their apex, but OK has z-index:2 so it covers
+ * the apex visually — the user only sees the triangle from the OK circle outwards.
+ * Adjacent triangles share their diagonal edges, so the four together tile the box. */
+.rc-dpad-up    { clip-path: polygon(0 0, 100% 0, 50% 50%); }
+.rc-dpad-down  { clip-path: polygon(0 100%, 100% 100%, 50% 50%); }
+.rc-dpad-left  { clip-path: polygon(0 0, 0 100%, 50% 50%); }
+.rc-dpad-right { clip-path: polygon(100% 0, 100% 100%, 50% 50%); }
+/* Pressed-wedge feedback. Each arrow button's ::before is a 240×240 circle (matches the
+ * visible ring exactly), centered inside the 288 container. The button's trapezoid
+ * clip-path also cuts the ::before, so what we see is the *intersection* of "circle" and
+ * "this button's wedge" — a quarter-of-a-circle slice. Inset shadow gives a 3D "pushed in"
+ * look. JS-managed .is-pressed instead of :active because Mobile Safari skips :active when
+ * touchstart calls preventDefault. */
+/* Press fill: a circle the size of the visible ring; the parent button's triangle
+ * clip-path slices it to a pie sector, and the OK button (on top, z-index:2) covers the
+ * pointy apex — so the user sees a clean annular sector with rounded inner+outer edges. */
+.rc-dpad-up::before,
+.rc-dpad-down::before,
+.rc-dpad-left::before,
+.rc-dpad-right::before {
+  content: '';
+  position: absolute;
+  inset: 24px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.32);
+  box-shadow: inset 0 0 18px rgba(0, 0, 0, 0.55);
+  opacity: 0;
+  transition: opacity 0.08s ease-out;
+  pointer-events: none;
+}
+.rc-dpad-up.is-pressed::before,
+.rc-dpad-down.is-pressed::before,
+.rc-dpad-left.is-pressed::before,
+.rc-dpad-right.is-pressed::before { opacity: 1; }
+
+/* OK centre button — 33.3% × 33.3% positioned at 33.3%/33.3% so its edges meet the
+ * apexes of all four wedges. z-index puts it above the wedges for taps. */
+.rc-dpad-center {
+  width: 33.3%;
+  height: 33.3%;
+  top: 33.3%;
+  left: 33.3%;
+  border-radius: 50%;
+  z-index: 2;
+  background: radial-gradient(circle at 50% 30%, #3a3a3c 0%, #1c1c1e 100%) !important;
+  border: 1px solid rgba(255,255,255,0.08) !important;
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--fg);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), 0 2px 6px rgba(0,0,0,0.6);
+}
+.rc-dpad-center:active {
+  background: radial-gradient(circle at 50% 30%, #4a4a4c 0%, #2a2a2c 100%) !important;
+  transform: scale(0.96);
+}
