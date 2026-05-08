@@ -21,6 +21,7 @@ function api(path, opts = {}) {
     method: opts.method || "GET",
     headers: opts.body ? { "Content-Type": "application/json" } : {},
     body: opts.body ? JSON.stringify(opts.body) : undefined,
+    signal: opts.signal,
   }).then((r) => r.json());
 }
 
@@ -109,9 +110,108 @@ export default function App() {
   const [adbAuthorized, setAdbAuthorized] = useState(true); // optimistic — banner only flashes if check fails
   const [authorizing, setAuthorizing] = useState(false);
   const [connected, setConnected] = useState(true);
+  const connectedRef = useRef(connected);
+  connectedRef.current = connected;
   const [sourceOpen, setSourceOpen] = useState(false);
   const [dialog, setDialog] = useState(null);
   const dialogResolverRef = useRef(null);
+  /**
+   * Live-only request governance. Two layers:
+   *
+   *   1. {@link liveAbortRef}: a shared AbortController that the offline-transition effect
+   *      flips to abort everything in flight. Lets us *try* to cancel a parked iOS
+   *      request — sometimes it actually goes through, but we don't depend on it.
+   *
+   *   2. {@link inFlightRef} + {@link pendingKeyRef}: a single-flight semaphore for keypresses.
+   *      iOS doesn't fail fetch() fast on a dropped radio — it parks the request in the OS
+   *      network queue and *replays* the whole queue when the link returns, flooding the
+   *      bridge with stale taps. AbortController in JS land doesn't reach into that OS
+   *      queue. So we cap the stack: at most ONE keypress can be in flight at a time;
+   *      while one is pending, additional taps just overwrite a single "next" slot. The
+   *      caller's hold loop can fire as fast as it wants — the network sees one request,
+   *      then one more, never a queued backlog.
+   */
+  const liveAbortRef = useRef(new AbortController());
+  const inFlightRef = useRef(false);
+  const pendingKeyRef = useRef(null);
+  /**
+   * Circuit breaker. AbortController in JS only rejects the Promise — on iOS Safari it
+   * doesn't always cancel the underlying request that's already been handed to the OS
+   * network queue. So if the projector goes offline and we keep firing keyevents, every
+   * timeout cycle adds one more parked request to iOS's queue, and they all replay when
+   * the radio comes back. Trip this flag the moment ONE keyevent fails — refuse to fire
+   * any more keyevents until the polling refresh confirms the bridge is reachable again.
+   */
+  const circuitOpenRef = useRef(false);
+  const [pollFast, setPollFast] = useState(false);
+
+  /**
+   * Helper for one-shot control calls (source switch, power) that should only run when
+   * the bridge is known-reachable. Skips when offline, gives the request a tight per-call
+   * deadline, and silently swallows aborts. Use {@link sendKeyDispatch} for keypresses
+   * since those need the single-flight semaphore.
+   */
+  function liveCall(path, opts = {}, deadlineMs = 1500) {
+    if (!connectedRef.current) return Promise.resolve(null);
+    const perCall = new AbortController();
+    const timer = setTimeout(() => perCall.abort(), deadlineMs);
+    const onShared = () => perCall.abort();
+    liveAbortRef.current.signal.addEventListener("abort", onShared, { once: true });
+    return api(path, { ...opts, signal: perCall.signal })
+      .catch((e) => {
+        if (e?.name === "AbortError") return null;
+        throw e;
+      })
+      .finally(() => {
+        clearTimeout(timer);
+        liveAbortRef.current.signal.removeEventListener("abort", onShared);
+      });
+  }
+
+  /**
+   * Single-flight keyevent dispatcher with a circuit-breaker around iOS's parked-fetch
+   * queue. First call fires; concurrent calls just overwrite a single "pending" slot. The
+   * settled call's loop picks up whatever's pending and fires that once. If any fetch
+   * fails (timeout/abort/error), the circuit opens — no more keyevents leave the device
+   * until the polling refresh confirms the bridge is reachable again, at which point
+   * pollFast also kicks in to bring the recovery latency from 5 s down to ~1 s.
+   */
+  async function sendKeyDispatch(keyCode) {
+    if (!connectedRef.current || circuitOpenRef.current) return;
+    if (inFlightRef.current) {
+      // Hot path during a held press: replace whatever's pending with the most recent tap.
+      pendingKeyRef.current = keyCode;
+      return;
+    }
+    inFlightRef.current = true;
+    let current = keyCode;
+    try {
+      while (current != null) {
+        let ok = false;
+        try {
+          const r = await liveCall(`/api/adb/keyevent/${current}`, { method: "POST" }, 1500);
+          ok = r != null;  // liveCall returns null on abort
+        } catch (e) {
+          setErr(String(e));
+        }
+        if (!ok) {
+          // Trip the breaker. Drop pending; stop firing until polling closes the circuit.
+          circuitOpenRef.current = true;
+          pendingKeyRef.current = null;
+          setPollFast(true);
+          return;
+        }
+        if (!connectedRef.current) {
+          pendingKeyRef.current = null;
+          return;
+        }
+        current = pendingKeyRef.current;
+        pendingKeyRef.current = null;
+      }
+    } finally {
+      inFlightRef.current = false;
+    }
+  }
 
   function openDialog(spec) {
     return new Promise((resolve) => {
@@ -142,6 +242,10 @@ export default function App() {
       setState(s); setPresets(ps); setInputs(ins || []);
       if (adb) setAdbAuthorized(!!adb.authorized);
       setConnected(true);
+      // Successful round-trip means the bridge is reachable — close the keyevent circuit
+      // breaker and step polling back down to the leisurely cadence.
+      circuitOpenRef.current = false;
+      setPollFast(false);
     } catch (e) {
       // Bridge unreachable — likely the projector is asleep / off-network. Don't surface
       // the raw network error as a red banner every 5 s; the disconnected indicator says
@@ -165,15 +269,33 @@ export default function App() {
   useEffect(() => {
     refresh();
     api("/api/picture").then(setPicture).catch((e) => setErr(String(e)));
-    const t = setInterval(refresh, 5000);
+    // Tight polling (1 s) when the keyevent circuit is open so we close it within ~1 s
+    // of reachability returning instead of waiting up to 5 s. Drops back to 5 s during
+    // healthy operation.
+    const t = setInterval(refresh, pollFast ? 1000 : 5000);
     return () => clearInterval(t);
-  }, [refresh]);
+  }, [refresh, pollFast]);
 
   // Errors from a failed action (sendKey, switchInput, etc.) usually surface during a
   // brief outage. Clear them automatically the next time the bridge comes back online so
   // the user doesn't have to dismiss a stale red card by hand.
   useEffect(() => {
     if (connected) setErr(null);
+  }, [connected]);
+
+  // The moment we detect the bridge is unreachable, abort every parked live request so
+  // they can't replay against the bridge when the radio comes back, drop any held-key
+  // tap that was queued in the single-flight slot, trip the keyevent circuit so no new
+  // taps fire, and switch polling to the fast 1 s cadence so we close the circuit ~1 s
+  // after the link returns rather than waiting up to 5 s.
+  useEffect(() => {
+    if (!connected) {
+      liveAbortRef.current.abort();
+      liveAbortRef.current = new AbortController();
+      pendingKeyRef.current = null;
+      circuitOpenRef.current = true;
+      setPollFast(true);
+    }
   }, [connected]);
 
   // While the user is mid-authorize, poll the status endpoint every 1s so we flip the UI
@@ -258,9 +380,11 @@ export default function App() {
 
   async function switchInput(to) {
     setSourceOpen(false);
+    if (!connected) return;
     setBusy(true);
     try {
-      await api("/api/input", { method: "POST", body: { to } });
+      const r = await liveCall("/api/input", { method: "POST", body: { to } }, 3000);
+      if (r === null) { setBusy(false); return; }
       // The AIDL `currentInputSource` lags (HDMI switch updates it; the Apps path just fires a
       // launcher intent and xgimiservice doesn't notice). Optimistically reflect the user's pick.
       const aidlSource = to === "STORAGE" ? "E_INPUT_SOURCE_STORAGE"
@@ -285,13 +409,12 @@ export default function App() {
   // standby exactly the way the physical remote's power button does — single press off when
   // on, single press wakes when off.
   async function pressPower() {
-    try { await api(`/api/adb/keyevent/2100`, { method: "POST" }); }
+    try { await liveCall(`/api/adb/keyevent/2100`, { method: "POST" }, 3000); }
     catch (e) { setErr(String(e)); }
   }
 
   async function sendKey(keyCode) {
-    try { await api(`/api/adb/keyevent/${keyCode}`, { method: "POST" }); }
-    catch (e) { setErr(String(e)); }
+    sendKeyDispatch(keyCode);
   }
 
   const onStorage = picture?.currentInputSource === "E_INPUT_SOURCE_STORAGE";
