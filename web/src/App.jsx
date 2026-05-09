@@ -558,12 +558,15 @@ function SourceSheet({ inputs, picture, busy, onPick, onClose }) {
           <button className={"input-btn input-btn-row" + activeFor("E_INPUT_SOURCE_STORAGE")} onClick={() => onPick("STORAGE")} disabled={busy}>
             <span>Apps</span><small>Android TV</small>
           </button>
-          <button className={"input-btn input-btn-row" + activeFor("E_INPUT_SOURCE_HDMI1")} onClick={() => onPick("HDMI1")} disabled={busy}>
-            <span>HDMI 1</span><small>{inputLabelForPort(inputs, 1, "")}</small>
-          </button>
-          <button className={"input-btn input-btn-row" + activeFor("E_INPUT_SOURCE_HDMI2")} onClick={() => onPick("HDMI2")} disabled={busy}>
-            <span>HDMI 2</span><small>{inputLabelForPort(inputs, 2, "")}</small>
-          </button>
+          {[1, 2].map((port) => {
+            const cec = inputLabelForPort(inputs, port, "");
+            return (
+              <button key={port} className={"input-btn input-btn-row" + activeFor(`E_INPUT_SOURCE_HDMI${port}`)} onClick={() => onPick(`HDMI${port}`)} disabled={busy}>
+                <span>{cec || `HDMI ${port}`}</span>
+                {cec && <small>HDMI {port}</small>}
+              </button>
+            );
+          })}
         </div>
         <div className="modal-actions">
           <button className="modal-btn" onClick={onClose}>Close</button>
